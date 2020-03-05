@@ -30,7 +30,6 @@ const Product = sequelize.define('product',{
   }
 })
 
-
 //Export your model usable in any other module
 
 module.exports = Product;

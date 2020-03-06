@@ -2,6 +2,8 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const sequelize = require('./util/database');
+const Product = require('./models/product');
+const User = require('./models/user');
 
 const errorController = require('./controllers/error');
 
@@ -22,6 +24,8 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
+
+Product.belongsTo(User)  //these are for products created by users
 
 sequelize.sync()
 .then( result =>{

@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const sequelize = require('./util/database');
 const Product = require('./models/product');
 const User = require('./models/user');
+const Cart = require('./models/cart');
+const CartItem = require('./models/cart-item');
 
 const errorController = require('./controllers/error');
 
@@ -15,18 +17,16 @@ app.set('views', 'views');
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 
-
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use((req,res,next) =>{ //only runs after app initialized
-    //reach into my db get my user
-    User.findByPk(1)
-    .then( user =>{
-        req.user = user; //whenever we call req.user in our code it comes embedded wiht sequel methods e.g .destroy
-        next();
-    })
-    .catch(err =>{console.log(err)});
+app.use((req, res, next) => { //only runs after app initialized                            
+    User.findByPk(1) //reach into my db get my user
+        .then(user => {
+            req.user = user; //whenever we call req.user in our code it comes embedded with sequel methods e.g .destroy
+            next();
+        })
+        .catch(err => { console.log(err) });
 })
 
 app.use('/admin', adminRoutes);
@@ -34,16 +34,24 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-
-Product.belongsTo(User, {  //these are for products created by users
+//ASSOCIATIONS
+Product.belongsTo(User, {  //these are for products created by users i.e Admins
     constraints: true,
     onDelete: 'CASCADE'
 })
 User.hasMany(Product);
+User.hasOne(Cart);
+Cart.belongsTo(User); //will add a new field to the cart which is the userId to which the cart belongs
+Cart.belongsToMany(Product,
+    { through: CartItem });//through ==>points sequelize to where this connectioms should be stored
+Product.belongsToMany(Cart,
+    { through: CartItem }); //many-to-many coz one cart can hold many products and many products can be held in many carts
+//this works with an intermediate table which works with a combi of productId and cartId ==> cart-item model
+
 
 //with the above setup sequelize wont jst setup the 2 tables but also define their relations as defined
-//forces re-Sync i.e drops any existing tables and re-do with the ralations 
-//sequelize.sync({ force:true}) 
+//forces re-Sync i.e drops any existing tables and re-do with the ralations ==> sequelize.sync({ force:true}) 
+
 sequelize
     .sync()
     .then(result => {
@@ -52,16 +60,20 @@ sequelize
     })
     .then(user => {
         if (!user) {
-            return User.create({ 
+            return User.create({
                 name: 'Mash',
-                email: "test@test.com" })
+                email: "test@test.com"
+            })
         }
         return user;
     })
     .then(user => {
         //console.log(user);
+        return user.createCart();
+    })
+    .then(cart =>{
         app.listen(3000, () => {
-            console.log('Server listening on port 3000')
+            console.log('Server listening on port 3000');
         });
     })
     .catch(err => {

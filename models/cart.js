@@ -3,7 +3,7 @@ const sequelize = require('../util/database');
 
 const Cart = sequelize.define('cart',{
   id:{
-    type:Sequelize.STRING,
+    type:Sequelize.INTEGER,
     autoIncrement:true,
     allowNull:false,
     primaryKey:true
@@ -11,4 +11,4 @@ const Cart = sequelize.define('cart',{
   }
 })
 
-module.exports = Cart;
+module.exports = Cart; // A cart belongs to one user but has multiple products

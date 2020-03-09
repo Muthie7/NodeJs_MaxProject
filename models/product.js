@@ -1,10 +1,7 @@
 const Sequelize = require('sequelize'); //gives back a constructor function
-
 const sequelize =  require('../util/database'); //import db magt pool by sequelize
 
-
 //we can now design a Model managed by sequelize
-
 const Product = sequelize.define('product',{
   id:{
     type: Sequelize.INTEGER,

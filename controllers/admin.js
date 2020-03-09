@@ -13,11 +13,11 @@ exports.postAddProduct = (req, res, next) => {
   const price = req.body.price;
   const imageUrl = req.body.imageUrl;
   const description = req.body.description;
-  Product.create({
+  req.user.createProduct({  //special sequelize fxn addedto the User since we used belongsTo function to Product
     title: title,
     price: price,
     imageUrl: imageUrl,
-    description: description
+    description: description //Automatically creates a connected model,,,easy way to use associations in sequelize  ,ensure our models know bput eachother
   })
     .then(result => {
       console.log(result);
@@ -34,21 +34,23 @@ exports.getEditProduct = (req, res, next) => {
     return res.redirect('/');
   }
   const prodId = req.params.productId;
-  Product.findAll({
+  req.user.getProducts({
     where: {
       id: prodId
     }
-  }).then(products => {
-    if (!products) {
-      return res.redirect('/');
-    }
-    res.render('admin/edit-product', {
-      pageTitle: 'Edit Product',
-      path: '/admin/edit-product',
-      editing: editMode,
-      product: products[0]
-    });
-  })
+  })// Product.findByPk(prodId)
+    .then(products => {
+      const product = products[0];
+      if (!product) {
+        return res.redirect('/');
+      }
+      res.render('admin/edit-product', {
+        pageTitle: 'Edit Product',
+        path: '/admin/edit-product',
+        editing: editMode,
+        product: product
+      });
+    })
     .catch(err => {
       console.log(err)
     })
@@ -79,7 +81,7 @@ exports.postEditProduct = (req, res, next) => {
 }
 
 exports.getProducts = (req, res, next) => {
-  Product.findAll()
+  req.user.getProducts() //gets ALL products for the user
     .then(products => {
       res.render('admin/products', {
         prods: products,
@@ -92,13 +94,9 @@ exports.getProducts = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.findAll({
-    where: {
-      id: prodId
-    }
-  })
-    .then(products => {
-      return products[0].destroy();
+  Product.findByPk(prodId)
+    .then(product => {
+      return product.destroy();
     })
     .then(results => {
       console.log('DESTROYED PRODUCT');

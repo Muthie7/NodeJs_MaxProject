@@ -6,6 +6,8 @@ const Product = require('./models/product');
 const User = require('./models/user');
 const Cart = require('./models/cart');
 const CartItem = require('./models/cart-item');
+const Order = require('./models/order');
+const OrderItem = require('./models/order-item');
 
 const errorController = require('./controllers/error');
 
@@ -46,14 +48,17 @@ Cart.belongsToMany(Product,
     { through: CartItem });//through ==>points sequelize to where this connectioms should be stored
 Product.belongsToMany(Cart,
     { through: CartItem }); //many-to-many coz one cart can hold many products and many products can be held in many carts
-//this works with an intermediate table which works with a combi of productId and cartId ==> cart-item model
-
+                            //this works with an intermediate table which works with a combi of productId and cartId ==> cart-item model
+Order.belongsTo(User);
+User.hasMany(Order);
+Order.belongsToMany(Product,{ through: OrderItem}); //belongs to many products and does so with an inBtwn table specified by OrderItem
+Product.belongsToMany(Order, { through: OrderItem})
 
 //with the above setup sequelize wont jst setup the 2 tables but also define their relations as defined
 //forces re-Sync i.e drops any existing tables and re-do with the ralations ==> sequelize.sync({ force:true}) 
 
 sequelize
-    .sync()
+    .sync({ force:true})
     .then(result => {
         //console.log(result);
         return User.findByPk(1);

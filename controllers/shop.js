@@ -101,7 +101,7 @@ exports.postCart = (req, res, next) => { //Adding a product to the cart
       })
     })
     .then(() => {
-      res.redirect('/cart');
+      res.redirect('/cart'); //prefarably redirect to /products not to always have to go back for item quantity
     })
     .catch(err => { console.log(err) })
 };
@@ -109,45 +109,72 @@ exports.postCart = (req, res, next) => { //Adding a product to the cart
 exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
   req.user
-  .getCart() //get cart for the specific user
-  .then( cart =>{
-    return cart.getProducts({ //find the products for that specific user by their prodId
-      where:{
-        id:prodId  
-      }
+    .getCart() //get cart for the specific user
+    .then(cart => {
+      return cart.getProducts({ //find the products for that specific user by their prodId
+        where: {
+          id: prodId
+        }
+      })
     })
-  })
-  .then( products =>{
-    const product = products[0];
-    return product.cartItem.destroy();//destroy the product but only in the carts table
-  })
-  .then( result =>{
-    return res.redirect('/cart')
-  })
-  .catch(err =>{
-    console.log(err)
-  })
+    .then(products => {
+      const product = products[0];
+      return product.cartItem.destroy();//destroy the product but only in the carts table
+    })
+    .then(result => {
+      return res.redirect('/cart')
+    })
+    .catch(err => {
+      console.log(err)
+    })
 };
 
 //Orders
-exports.postOrder = (req,res,next) =>{
+exports.postOrder = (req, res, next) => {
+  let fetchedCart;
   //take all the cart items and move them into an order
   req.user
-  .getCart()
-  .then(cart =>{
-    return cart.getProducts(); //return all products by default
-  })
-  .then(products =>{
-    console.log(products);
-  })
-  .catch(err =>{console.log(err)})
+    .getCart()
+    .then(cart => {
+      fetchedCart = cart;
+      return cart.getProducts(); //return all products by default
+    })
+    .then(products => {
+      return req.user.createOrder() //sequelize creates order and returns it
+        .then(order => {  //addProduct picks that up and add the products to the order with that quantity
+          return order.addProducts(products.map(product => { //i have an array of products mapped from the initial products 
+            product.orderItem = { quantity: product.cartItem.quantity } //plus sme info regarding quantity of my order
+            return product;
+          }))
+        }) //associate the user products in his cart to his order
+        .catch(err => { console.log(err) });
+    })
+    .then(result => {
+      //remove cart content after you order
+      return fetchedCart.setProducts(null);
+    })
+    .then(result => {
+      res.redirect('/orders');
+    })
+    .catch(err => { console.log(err) });
 }
 
+//SHOW ORDERS
 exports.getOrders = (req, res, next) => {
-  res.render('shop/orders', {
-    path: '/orders',
-    pageTitle: 'Your Orders'
-  });
+  req.user
+    .getOrders({include :['products']})
+    .then(orders => {
+      console.log(orders);
+      res.render('shop/orders', {
+        path: '/orders',
+        pageTitle: 'Your Orders',
+        orders: orders
+      });
+    })
+    .catch(err => {
+      console.log(err)
+    });
+
 };
 
 exports.getCheckout = (req, res, next) => {

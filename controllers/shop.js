@@ -1,5 +1,5 @@
 const Product = require('../models/product');
-const Cart = require('../models/cart');
+const Order = require('../models/order');
 
 exports.getProducts = (req, res, next) => {
   Product.findAll()
@@ -128,6 +128,20 @@ exports.postCartDeleteProduct = (req, res, next) => {
     console.log(err)
   })
 };
+
+//Orders
+exports.postOrder = (req,res,next) =>{
+  //take all the cart items and move them into an order
+  req.user
+  .getCart()
+  .then(cart =>{
+    return cart.getProducts(); //return all products by default
+  })
+  .then(products =>{
+    console.log(products);
+  })
+  .catch(err =>{console.log(err)})
+}
 
 exports.getOrders = (req, res, next) => {
   res.render('shop/orders', {

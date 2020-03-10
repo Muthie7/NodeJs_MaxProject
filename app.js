@@ -36,19 +36,21 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-//ASSOCIATIONS
+//User ASSOCIATIONS
 Product.belongsTo(User, {  //these are for products created by users i.e Admins
     constraints: true,
     onDelete: 'CASCADE'
 })
 User.hasMany(Product);
+
+//Carts Associations
 User.hasOne(Cart);
 Cart.belongsTo(User); //will add a new field to the cart which is the userId to which the cart belongs
-Cart.belongsToMany(Product,
-    { through: CartItem });//through ==>points sequelize to where this connectioms should be stored
-Product.belongsToMany(Cart,
-    { through: CartItem }); //many-to-many coz one cart can hold many products and many products can be held in many carts
+Cart.belongsToMany(Product,{ through: CartItem });//through ==>points sequelize to where this connectioms should be stored
+Product.belongsToMany(Cart,{ through: CartItem }); //many-to-many coz one cart can hold many products and many products can be held in many carts
                             //this works with an intermediate table which works with a combi of productId and cartId ==> cart-item model
+
+//Orders Associations
 Order.belongsTo(User);
 User.hasMany(Order);
 Order.belongsToMany(Product,{ through: OrderItem}); //belongs to many products and does so with an inBtwn table specified by OrderItem
@@ -58,7 +60,7 @@ Product.belongsToMany(Order, { through: OrderItem})
 //forces re-Sync i.e drops any existing tables and re-do with the ralations ==> sequelize.sync({ force:true}) 
 
 sequelize
-    .sync({ force:true})
+    .sync()
     .then(result => {
         //console.log(result);
         return User.findByPk(1);
@@ -78,7 +80,9 @@ sequelize
     })
     .then(cart =>{
         app.listen(3000, () => {
+            console.log('======================================');
             console.log('Server listening on port 3000');
+            console.log('======================================')
         });
     })
     .catch(err => {

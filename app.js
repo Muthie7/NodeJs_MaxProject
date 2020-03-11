@@ -60,7 +60,7 @@ Product.belongsToMany(Order, { through: OrderItem})
 //forces re-Sync i.e drops any existing tables and re-do with the ralations ==> sequelize.sync({ force:true}) 
 
 sequelize
-    .sync()
+    .sync(s)
     .then(result => {
         //console.log(result);
         return User.findByPk(1);

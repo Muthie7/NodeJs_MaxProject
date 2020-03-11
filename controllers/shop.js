@@ -102,7 +102,7 @@ exports.postCart = (req, res, next) => { //Adding a product to the cart
     })
     .then(() => {
       res.redirect('/cart'); //prefarably redirect to /products not to always have to go back for item quantity
-    })
+    }) 
     .catch(err => { console.log(err) })
 };
 
